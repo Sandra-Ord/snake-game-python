@@ -2,23 +2,8 @@ import pygame
 import colors
 from direction import Direction
 from brain import Brain
-
-
-def display_score(dis, score_font, score, x, score_tag_text=""):
-    text = score_font.render(score_tag_text + str(score), True, colors.RED)
-    dis.blit(text, [x, 0])
-
-
-def draw_game_area(dis, borders, base_color=colors.BLACK, border_color=colors.WHITE) -> None:
-    dis.fill(base_color)
-    for border in borders:
-        border = [blocks_to_pixels(value) for value in border]
-        pygame.draw.rect(dis, border_color, border)
-
-
-def display_game_status(dis, status_text, display_width, display_height, text_font, color=colors.WHITE):
-    text = text_font.render(status_text, True, color)
-    dis.blit(text, [blocks_to_pixels(display_width) / 2, blocks_to_pixels(display_height) / 3])
+from ui import Ui
+from score_type import ScoreType
 
 
 def display_instructions(dis, display_width, display_height, text_font, color=colors.WHITE):
@@ -37,11 +22,6 @@ def display_instructions(dis, display_width, display_height, text_font, color=co
         display_height += 30
 
 
-def draw_snake(dis, snake, color=colors.GREEN):
-    for pos in snake.positions:
-        pygame.draw.rect(dis, color, [blocks_to_pixels(pos[0]), blocks_to_pixels(pos[1]), blocks_to_pixels(1), blocks_to_pixels(1)])
-
-
 def blocks_to_pixels(blocks: int, block_size=10) -> int:
     """
     Converts the in-game block measurements to pixel measurements for the display.
@@ -55,15 +35,13 @@ def blocks_to_pixels(blocks: int, block_size=10) -> int:
 
 
 def game_loop():
-    block_size = 10
     game_brain = Brain(80, 60, [2, 2, 2, 2])
 
     # Game Initialization
     pygame.init()
 
+    ui = Ui(game_brain)
     # Display Set Up
-    dis = pygame.display.set_mode((blocks_to_pixels(game_brain.display_width),
-                                   blocks_to_pixels(game_brain.display_height)))
     pygame.display.set_caption('Snake (Python) Game')
 
     # Game Clock Set Up
@@ -76,39 +54,27 @@ def game_loop():
     while not game_brain.game_quit:
         # Game is paused
         while game_brain.game_paused:
-            draw_game_area(dis, game_brain.get_borders())
-            display_instructions(dis, game_brain.display_width, game_brain.display_height, score_font)
-            display_score(dis, score_font, game_brain.current_score, 0)
+            ui.draw_game_area()
+            display_instructions(ui.display, game_brain.display_width, game_brain.display_height, score_font)
+            ui.display_score(ScoreType.Current)
+            ui.display_score(ScoreType.High, ui.display_width * 0.8, 0, "Highscore: ")
+            ui.display_game_status()
+            pygame.display.update()
 
-            if not game_brain.game_over:
-                display_game_status(dis, "Game Paused!", game_brain.display_width, game_brain.display_height, score_font)
-                pygame.display.update()
-
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # Continue Game
-                            game_brain.unpause_game()
-                        elif event.key == pygame.K_q:  # Quit game
-                            game_brain.quit_game()
-                        elif event.key == pygame.K_s:  # New Game
-                            game_brain.restart_game()
-                        break
-            else:
-                display_game_status(dis, "Game Over!",
-                                    game_brain.display_width, game_brain.display_height, score_font)
-                pygame.display.update()
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_q:  # Quit Game
-                            game_brain.quit_game()
-                        elif event.key == pygame.K_s:  # New Game
-                            game_brain.restart_game()
-                        break
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # Continue Game
+                        game_brain.unpause_game()
+                    elif event.key == pygame.K_q:  # Quit game
+                        game_brain.quit_game()
+                    elif event.key == pygame.K_s:  # New Game
+                        game_brain.restart_game()
+                    break
 
             if game_brain.game_quit or game_brain.game_paused:
                 continue
 
-        # Game is not Paused
+        # Game should not be paused here, but the check is here to ensure it is not paused for the code after
         if game_brain.game_quit or game_brain.game_paused:
             continue
 
@@ -135,11 +101,11 @@ def game_loop():
         if game_brain.game_quit or game_brain.game_paused:
             continue
 
-        draw_game_area(dis, game_brain.get_borders())
-        pygame.draw.rect(dis, colors.RED, [blocks_to_pixels(game_brain.food.x_coordinate), blocks_to_pixels(game_brain.food.y_coordinate),
-                                           blocks_to_pixels(1), blocks_to_pixels(1)])
-        draw_snake(dis, game_brain.snake)
-        display_score(dis, score_font, game_brain.current_score, 0)
+        ui.draw_game_area()
+        ui.draw_food()
+        ui.draw_snake()
+        ui.display_score()
+        ui.display_score(ScoreType.High, ui.display_width * 0.8, 0, "Highscore: ")
 
         pygame.display.update()
 
@@ -147,7 +113,7 @@ def game_loop():
             game_brain.snake_eat()
             game_brain.generate_food()
 
-        clock.tick(game_brain.snake.step)
+        clock.tick(game_brain.snake.step * 10)
 
     pygame.quit()
     quit()

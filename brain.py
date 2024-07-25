@@ -16,6 +16,10 @@ class Brain:
     and a high score, which is stored for the time the game is open.
     """
 
+    # todo implement game_win status
+    # e.g. game_satus = -1, 0, 1
+    # -1 - game lost | 0 - ongoing game | 1 - game won
+    # game is won if the snake's length is equal to game_area_Width * game_area_height
     def __init__(self, game_area_width: int, game_area_height: int, border_widths):
         """
         Game Brain constructor method.
@@ -32,8 +36,6 @@ class Brain:
         elif isinstance(border_widths, list):
             border_widths = (border_widths + [2] * 4)[:4]
             self.top_border, self.bottom_border, self.left_border, self.right_border = border_widths
-
-        self.border_width = border_widths
 
         self.display_width = self.left_border + game_area_width + self.right_border  # total width of the display
         self.display_height = self.top_border + game_area_height + self.bottom_border  # total height of the display
@@ -70,6 +72,8 @@ class Brain:
 
     def unpause_game(self):
         """Sets the game_paused value to False."""
+        if self.game_over:
+            return
         self.game_paused = False
 
     def start_game(self):
@@ -96,8 +100,17 @@ class Brain:
                 [self.display_width - self.right_border, 0, self.right_border, self.display_height]]
 
     def generate_food(self) -> Food:
-        self.food = Food(round(random.randrange(0 + self.left_border, self.display_width - 1 - self.right_border) / 10.0) * 10.0,
-                         round(random.randrange(0 + self.top_border, self.display_height - 1 - self.bottom_border) / 10.0) * 10.0)
+        """
+        Generate a new food in a random location on the game board and assign it as the game's current food.
+        Location is generated randomly and checked to ensure, that it was not generated under the snake's positions.
+
+        :return: Generated food object.
+        """
+        # todo leave out the snake's positions from the random generation.
+        # maybe could be implemented with a list of all the game board block coordinates
+        # from which the snakes position is subtracted
+        self.food = Food(random.randrange(0 + self.left_border, self.display_width - self.right_border, 1),
+                         random.randrange(0 + self.top_border, self.display_height - self.bottom_border, 1))
         return self.food
 
     def snake_collision_detection(self) -> bool:
@@ -132,7 +145,7 @@ class Brain:
 
     def snake_eat(self):
         """Grow the snake and add the food's score points to the current score."""
-        # todo should previous food be removed?
+        # todo should the previous food be set to None?
         self.snake.grow()
         self.current_score += self.food.score
 
