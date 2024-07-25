@@ -3,6 +3,15 @@
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+"""Superfood colors for the snake game."""
+
+BRIGHT_MAGENTA = (255, 0, 255)  # 40+ steps
+MAGENTA = (205, 0, 205)  # 30-40 steps
+MEDIUM_MAGENTA = (150, 0, 150)  # 20-30 steps
+DIM_MAGENTA = (100, 0, 100)  # 10-20 steps
+DARK_MAGENTA = (80, 0, 80)  # 5-10 steps
+ALMOST_BLACK_MAGENTA = (50, 0, 50)  # 0-5 steps
+
 """Color constants for the default color scheme snake game."""
 
 RED = (213, 50, 80)

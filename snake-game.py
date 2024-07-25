@@ -1,7 +1,7 @@
 import pygame
 from enums.direction import Direction
-from brain import Brain
-from ui import Ui
+from components.brain import Brain
+from components.ui import Ui
 
 
 def game_loop():
@@ -24,9 +24,9 @@ def game_loop():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # Continue Game
                         game_brain.unpause_game()
-                    elif event.key == pygame.K_q:  # Quit game
+                    elif event.key == pygame.K_q:
                         game_brain.quit_game()
-                    elif event.key == pygame.K_s:  # New Game
+                    elif event.key == pygame.K_s:
                         game_brain.restart_game()
                     elif event.key == pygame.K_z:
                         ui.set_slytherin_color_scheme()
@@ -66,25 +66,17 @@ def game_loop():
                     ui.set_ekans_color_scheme()
                 elif event.key == pygame.K_DELETE:
                     ui.set_default_color_scheme()
+                break
 
         if game_brain.game_quit or game_brain.game_paused:
             continue
 
-        game_brain.snake.move()
-
-        if game_brain.snake_collision_detection():
-            game_brain.finish_game()
+        game_brain.snake_move()
 
         ui.draw_game()
         pygame.display.update()
 
-        if game_brain.snake_eating_detection():
-            game_brain.snake_eat()
-            # Currently the game only ends, if the snake collides with itself or with a border
-            # By commenting this in, the game will end the moment the snake reaches its maximum capacity
-            # if game_brain.snake_at_max_capacity():
-            #     game_brain.finish_game()
-            game_brain.generate_food()
+        game_brain.snake_move_effects()
 
         clock.tick(game_brain.snake.step * 10)
 

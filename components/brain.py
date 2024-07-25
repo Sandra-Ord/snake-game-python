@@ -1,8 +1,8 @@
 import random
 
 from enums.game_status import GameStatus
-from snake import Snake
-from food import Food
+from components.snake import Snake
+from components.food import Food
 
 
 class Brain:
@@ -142,9 +142,27 @@ class Brain:
 
         :return: Generated food object.
         """
+        x_coordinate = random.randrange(self.left_border, self.display_width - self.right_border)
+        y_coordinate = random.randrange(self.top_border, self.display_height - self.bottom_border)
+
+        # Default food score
+        score = 1
+        lifetime = 100
+
+        # Random chance for special food
+        rand_value = random.random()  # Generates a float between 0.0 and 1.0
+        print(rand_value)
+        if rand_value < 0.01:  # 1% chance for 50 points
+            score = 50
+        elif rand_value < 0.05:  # 4% chance for 10 points (totaling 5% with the previous chance)
+            score = 10
+        elif rand_value < 0.15:  # 10% chance for 5 points (totaling 15% with the previous chances)
+            score = 5
+        else:
+            lifetime = None
+
         # todo leave out the snake's positions from the random generation.
-        self.food = Food(random.randrange(0 + self.left_border, self.display_width - self.right_border, 1),
-                         random.randrange(0 + self.top_border, self.display_height - self.bottom_border, 1))
+        self.food = Food(x_coordinate, y_coordinate, score, lifetime)
         return self.food
 
     def snake_collision_detection(self) -> bool:
@@ -182,6 +200,26 @@ class Brain:
         # todo should the previous food be set to None?
         self.snake.grow()
         self.current_score += self.food.score
+
+    def snake_move(self) -> None:
+        self.snake.move()
+
+        if self.snake_collision_detection():
+            self.finish_game()
+
+    def snake_move_effects(self):
+        if self.snake_eating_detection():
+            self.snake_eat()
+            # Currently the game only ends, if the snake collides with itself or with a border
+            # By commenting this in, the game will end the moment the snake reaches its maximum capacity
+            # if self.snake_at_max_capacity():
+            #     self.finish_game()
+            self.generate_food()
+
+        elif self.food.lifetime is not None:
+            self.food.decrease_lifetime()
+            if self.food.lifetime == 0:
+                self.generate_food()
 
     def finish_game(self) -> None:
         """Pause and end the current game."""

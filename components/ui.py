@@ -1,5 +1,5 @@
 import pygame
-from brain import Brain
+from components.brain import Brain
 from utils import colors
 from utils.color_scheme import ColorScheme
 from enums.color_mode import ColorMode
@@ -94,7 +94,10 @@ class Ui:
     def draw_food(self) -> None:
         """Draw the food block using the food color of the color scheme."""
         food_x, food_y = self.brain.food.x_coordinate, self.brain.food.y_coordinate
-        pygame.draw.rect(self.display, self.color_scheme.food_color, self.pixel_rectangle([food_x, food_y, 1, 1]))
+        food_color = self.color_scheme.food_color
+        if self.brain.food.lifetime is not None:
+            food_color = self.get_special_food_color(self.brain.food.lifetime)
+        pygame.draw.rect(self.display, food_color, self.pixel_rectangle([food_x, food_y, 1, 1]))
 
     def display_score(self, score_type: ScoreType = ScoreType.CURRENT,
                       x: int = 0, y: int = 0,
@@ -256,3 +259,17 @@ class Ui:
         :return: Rectangle information [left_x_coordinate, top_y_coordinate, width, height] measured in pixels.
         """
         return [self.blocks_to_pixels(value) for value in block_rectangle]
+
+    def get_special_food_color(self, lifetime: int) -> tuple[int, int, int]:
+        if lifetime > 40:
+            return colors.BRIGHT_MAGENTA
+        elif lifetime > 30:
+            return colors.MAGENTA
+        elif lifetime > 20:
+            return colors.MEDIUM_MAGENTA
+        elif lifetime > 10:
+            return colors.DIM_MAGENTA
+        elif lifetime > 5:
+            return colors.DARK_MAGENTA
+        else:
+            return colors.ALMOST_BLACK_MAGENTA
