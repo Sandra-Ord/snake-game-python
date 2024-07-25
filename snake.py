@@ -1,6 +1,6 @@
 import random
 
-from direction import Direction
+from enums.direction import Direction
 
 
 class Snake:
@@ -24,7 +24,7 @@ class Snake:
         :param direction: Snake's starting direction.
                             If a direction is not provided, the snake will start in a random direction.
         """
-        self.positions = [(left, top)]
+        self.body_positions = [(left, top)]
 
         self.step = step
 
@@ -38,7 +38,7 @@ class Snake:
 
         :return:Length of the snake
         """
-        return len(self.positions)
+        return len(self.body_positions)
 
     def change_direction(self, new_direction: Direction) -> None:
         """
@@ -49,26 +49,28 @@ class Snake:
 
         :param new_direction: direction the snake will turn to and keep moving in.
         """
-        turn_allowed = [new_direction == Direction.RIGHT and not self.direction == Direction.LEFT,
-                        new_direction == Direction.LEFT and not self.direction == Direction.RIGHT,
-                        new_direction == Direction.UP and not self.direction == Direction.DOWN,
-                        new_direction == Direction.DOWN and not self.direction == Direction.UP]
-        if self.length == 1 or any(turn_allowed):
+        opposite_directions = {
+            Direction.RIGHT: Direction.LEFT,
+            Direction.LEFT: Direction.RIGHT,
+            Direction.UP: Direction.DOWN,
+            Direction.DOWN: Direction.UP,
+        }
+        if self.length == 1 or self.direction != new_direction and new_direction != opposite_directions[self.direction]:
             self.direction = new_direction
 
     def move(self) -> None:
         """
         Get the snake's head's current coordinates.
         Shift the coordinates by the snake's speed (step).
-        Add the new head position to the beginning of the snake's positions list and
+        Add the new head position to the beginning of the snake's body positions list and
         remove the last element from snake's tail.
         """
-        head_x, head_y = self.positions[0]
+        head_x, head_y = self.body_positions[0]
         new_head_position = self.shift_head_coordinates(head_x, head_y)
-        self.positions = [new_head_position] + self.positions[:-1]
+        self.body_positions = [new_head_position] + self.body_positions[:-1]
 
     def grow(self) -> None:
-        self.positions.append(self.positions[-1])
+        self.body_positions.append(self.body_positions[-1])
 
     def shift_head_coordinates(self, head_x, head_y) -> (int, int):
         """
@@ -94,7 +96,7 @@ class Snake:
 
         :return: Boolean for whether there has been a collision.
         """
-        for segment in self.positions[1:]:
-            if segment == self.positions[0]:
+        for segment in self.body_positions[1:]:
+            if segment == self.body_positions[0]:
                 return True
         return False

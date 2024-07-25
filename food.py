@@ -11,7 +11,7 @@ class Food:
         Food constructor method.
 
         Coordinates define the top left corner of the food block and
-        blocks defines the amount of game blocks the food is wide and high from that point.
+        blocks defines the amount of game blocks the food is wide and high from that point (1x1 block).
         Food should always be square-like (corners can be rounded for displaying).
 
         :param x_coordinate: Food block's left edge x-coordinate measured in game blocks.

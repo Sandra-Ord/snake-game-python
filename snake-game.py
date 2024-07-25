@@ -1,38 +1,11 @@
 import pygame
 import colors
-from direction import Direction
+from enums.direction import Direction
 from brain import Brain
 from ui import Ui
-from score_type import ScoreType
+from enums.score_type import ScoreType
 
-
-def display_instructions(dis, display_width, display_height, text_font, color=colors.WHITE):
-    instructions = [
-        "Esc - Pause the Game",
-        "Enter/Space - Continue",
-        "S - Start a new Game",
-        "Arrows - Move the Snake",
-        "Q - Quit"
-    ]
-    display_width = blocks_to_pixels(display_width)
-    display_height = blocks_to_pixels(display_height)
-    for line in instructions:
-        text = text_font.render(line, True, color)
-        dis.blit(text, [display_width / 2.5, display_height / 2])
-        display_height += 30
-
-
-def blocks_to_pixels(blocks: int, block_size=10) -> int:
-    """
-    Converts the in-game block measurements to pixel measurements for the display.
-    Multiplies the number of blocks with the block_size.
-
-    :param blocks: Coordinate or measurement size in in-game blocks.
-    :param block_size: How many pixels should one blocks be on the screen.
-    :return: Block measurement converted to pixels.
-    """
-    return blocks * block_size
-
+# add a color option
 
 def game_loop():
     game_brain = Brain(80, 60, [2, 2, 2, 2])
@@ -47,18 +20,10 @@ def game_loop():
     # Game Clock Set Up
     clock = pygame.time.Clock()
 
-    # Set up the font
-    font_style = pygame.font.SysFont(None, 50)
-    score_font = pygame.font.SysFont(None, 25)
-
     while not game_brain.game_quit:
         # Game is paused
         while game_brain.game_paused:
-            ui.draw_game_area()
-            display_instructions(ui.display, game_brain.display_width, game_brain.display_height, score_font)
-            ui.display_score(ScoreType.Current)
-            ui.display_score(ScoreType.High, ui.display_width * 0.8, 0, "Highscore: ")
-            ui.display_game_status()
+            ui.draw_game()
             pygame.display.update()
 
             for event in pygame.event.get():
@@ -73,6 +38,12 @@ def game_loop():
 
             if game_brain.game_quit or game_brain.game_paused:
                 continue
+        # todo fix bug
+        # current situation
+        # direction is changed
+        # the snake does not move forward before the change direction is listened again
+        # then when the opposite direction to original is called for
+        # self collision is detected, because the direction is not the opposite anymore
 
         # Game should not be paused here, but the check is here to ensure it is not paused for the code after
         if game_brain.game_quit or game_brain.game_paused:
@@ -96,21 +67,20 @@ def game_loop():
         game_brain.snake.move()
 
         if game_brain.snake_collision_detection():
-            game_brain.game_lost()
+            game_brain.finish_game()
 
         if game_brain.game_quit or game_brain.game_paused:
             continue
 
-        ui.draw_game_area()
-        ui.draw_food()
-        ui.draw_snake()
-        ui.display_score()
-        ui.display_score(ScoreType.High, ui.display_width * 0.8, 0, "Highscore: ")
-
+        ui.draw_game()
         pygame.display.update()
 
         if game_brain.snake_eating_detection():
             game_brain.snake_eat()
+            # Currently the game only ends, if the snake collides with itself or with a border
+            # By commenting this in, the game will end the moment the snake reaches its maximum capacity
+            # if game_brain.snake_at_max_capacity():
+            #     game_brain.finish_game()
             game_brain.generate_food()
 
         clock.tick(game_brain.snake.step * 10)
