@@ -1,3 +1,5 @@
+import random
+
 from direction import Direction
 
 
@@ -12,24 +14,31 @@ class Snake:
     The snake should avoid colliding into its own tail or the game worlds borders as that ends the game.
     """
 
-    def __init__(self, left: int, top: int, block_size=10, step=10, direction=Direction.RIGHT):
+    def __init__(self, left: int, top: int, step=1, direction=None):
         """
         Snake constructor method.
 
-        :param left: Snake block's left edge x-coordinate measured in game blocks.
-        :param top: Snake block's top edge y-coordinate measured in game blocks.
-        :param block_size:
-        :param step: Defines how big of a movement snake's one step is.
-        :param direction: Snake's starting direction
-        todo make into blck measurements and make static method for random coordinates and direction (goes is game brain)
+        :param left: Snake block's left edge x-coordinate measured in in-game blocks.
+        :param top: Snake block's top edge y-coordinate measured in in-game blocks.
+        :param step: Defines how many in-game blocks the snake should move forward at once.
+        :param direction: Snake's starting direction.
+                            If a direction is not provided, the snake will start in a random direction.
         """
         self.positions = [(left, top)]
 
-        self.block_size = block_size
         self.step = step
+
+        if direction is None:
+            direction = random.choice(list(Direction))
         self.direction = direction
 
-        self.length = 1
+    def length(self) -> int:
+        """
+        The length of the snake measured in in-game blocks.
+
+        :return:Length of the snake
+        """
+        return len(self.positions)
 
     def change_direction(self, new_direction: Direction) -> None:
         """
@@ -37,8 +46,8 @@ class Snake:
         If the snake is any longer, then the snake can turn
             to any directions that is not the opposite of the previous direction,
             as that would result in the snake turning into itself.
+
         :param new_direction: direction the snake will turn to and keep moving in.
-        :return: None
         """
         turn_allowed = [new_direction == Direction.RIGHT and not self.direction == Direction.LEFT,
                         new_direction == Direction.LEFT and not self.direction == Direction.RIGHT,
@@ -53,14 +62,12 @@ class Snake:
         Shift the coordinates by the snake's speed (step).
         Add the new head position to the beginning of the snake's positions list and
         remove the last element from snake's tail.
-        :return: None
         """
         head_x, head_y = self.positions[0]
         new_head_position = self.shift_head_coordinates(head_x, head_y)
         self.positions = [new_head_position] + self.positions[:-1]
 
     def grow(self) -> None:
-        self.length += 1
         self.positions.append(self.positions[-1])
 
     def shift_head_coordinates(self, head_x, head_y) -> (int, int):
@@ -78,12 +85,13 @@ class Snake:
         if self.direction == Direction.UP:
             head_y -= self.step
         if self.direction == Direction.DOWN:
-            head_y += self.block_size
+            head_y += self.step
         return head_x, head_y
 
     def self_collision_detection(self) -> bool:
         """
         Detects if the snake has collided into itself.
+
         :return: Boolean for whether there has been a collision.
         """
         for segment in self.positions[1:]:
