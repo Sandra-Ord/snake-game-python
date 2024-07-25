@@ -1,6 +1,9 @@
-from brain import Brain
-import colors
 import pygame
+from brain import Brain
+from utils import colors
+from utils.color_scheme import ColorScheme
+from enums.color_mode import ColorMode
+from enums.game_status import GameStatus
 from enums.score_type import ScoreType
 
 
@@ -12,11 +15,7 @@ class Ui:
     using the block_size to scale blocks to the wished scale.
     """
 
-    # todo implement different color schemas ?
-    # green snake and red food is default classic
-    # can create color package classes with different implementation
-    # (snake_head color, snake body color, text color, background color etc for customization)
-    def __init__(self, brain: Brain, block_size=10):
+    def __init__(self, brain: Brain, block_size: int = 10):
         """
         Game Ui constructor method.
 
@@ -27,12 +26,16 @@ class Ui:
 
         self.block_size = block_size
 
+        self.color_scheme = ColorScheme.get_default_color_scheme()
+
         self.display_width = self.blocks_to_pixels(brain.display_width)  # Actual width of the game board
         self.display_height = self.blocks_to_pixels(brain.display_height)  # Actual height of the game board
 
         self.display = pygame.display.set_mode([self.display_width, self.display_height])
 
-        self.game_font = pygame.font.SysFont(None, 25)
+        self.score_font = pygame.font.SysFont("monospace", 20, True)
+        self.instructions_font = pygame.font.SysFont("monospace", 18)
+        self.game_font = pygame.font.SysFont("monospace", 25, True)
 
     def draw_game(self) -> None:
         """
@@ -49,8 +52,9 @@ class Ui:
         display the game status (paused/lost/won) and instructions.
         """
         self.draw_game_area()
-        self.display_score(ScoreType.CURRENT)
+        self.display_score(ScoreType.CURRENT, self.blocks_to_pixels(self.brain.left_border))
         self.display_score(ScoreType.HIGH, round(self.display_width * 0.8), 0, "Highscore: ")
+        self.display_scheme_name()
         self.draw_game_elements()
         if self.brain.game_paused:
             self.draw_pause_elements()
@@ -76,27 +80,25 @@ class Ui:
         for border in self.brain.get_borders():
             pygame.draw.rect(self.display, border_color, self.pixel_rectangle(border))
 
-    def draw_snake(self, color=colors.GREEN) -> None:
-        """
-        Draw the snake block by block.
+    def draw_snake(self) -> None:
+        """Draw the snake block by block according to the color scheme."""
+        if self.color_scheme.color_mode == ColorMode.SOLID:
+            self.draw_solid_snake()
+        elif self.color_scheme.color_mode == ColorMode.STRIPED:
+            self.draw_striped_snake()
+        elif self.color_scheme.color_mode == ColorMode.DIFFERENT_HEAD:
+            self.draw_head_snake()
+        elif self.color_scheme.color_mode == ColorMode.DIFFERENT_TAIL:
+            self.draw_tail_snake()
 
-        :param color: Color of the snake's body.
-        """
-        for pos in self.brain.snake.body_positions:
-            pygame.draw.rect(self.display, color, self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-
-    def draw_food(self, color=colors.RED) -> None:
-        """
-        Draw the food block.
-
-        :param color: Color of the food block.
-        """
+    def draw_food(self) -> None:
+        """Draw the food block using the food color of the color scheme."""
         food_x, food_y = self.brain.food.x_coordinate, self.brain.food.y_coordinate
-        pygame.draw.rect(self.display, color, self.pixel_rectangle([food_x, food_y, 1, 1]))
+        pygame.draw.rect(self.display, self.color_scheme.food_color, self.pixel_rectangle([food_x, food_y, 1, 1]))
 
     def display_score(self, score_type: ScoreType = ScoreType.CURRENT,
                       x: int = 0, y: int = 0,
-                      score_tag_text: str = "", color=colors.RED) -> None:
+                      score_tag_text: str = "", color=colors.BLACK) -> None:
         """
         Display the requested score (current or high score) at the given coordinates with the tag text in front.
 
@@ -107,35 +109,130 @@ class Ui:
         :param color: Color of the text.
         """
         score = self.brain.high_score if score_type is ScoreType.HIGH else self.brain.current_score
-        text = self.game_font.render(score_tag_text + str(score), True, color)
+        text = self.score_font.render(score_tag_text + str(score), True, color)
         self.display.blit(text, [x, y])
 
+    def display_scheme_name(self) -> None:
+        """Display the name of the color scheme at the top of the screen."""
+        text = self.score_font.render(self.color_scheme.scheme_name, True, self.color_scheme.text_color)
+        self.display.blit(text, [self.display_width / 2.5, 0])
+
     def display_game_status(self, color=colors.WHITE) -> None:
+        """Display the game status (Paused/Lost/Won) when the game is not currently active."""
         if self.brain.game_paused:
-            status_text = ""
-            if self.brain.game_in_play():
-                status_text = "Game Paused"
-            elif self.brain.game_lost():
-                status_text = "Game Lost"
-            elif self.brain.game_won():
-                status_text = "Game Won"
+            status_text = {
+                GameStatus.ONGOING: "Game Paused",
+                GameStatus.LOST: "Game Lost",
+                GameStatus.WON: "Game Won"
+            }.get(self.brain.game_status, "")
+
             text = self.game_font.render(status_text, True, color)
-            self.display.blit(text, [self.display_width / 2, self.display_height / 3])
+            self.display.blit(text, [self.display_width / 2.5, self.display_height / 3])
 
     def display_instructions(self, color=colors.WHITE) -> None:
-        # todo improve instructions
+        """Display the instructions of the game, depending on the state and what actions are allowed."""
         instructions = [
-            "Esc - Pause the Game",
+            "← ↕ → - Move the Snake",
+            "Esc  -  Pause the Game",
             "Enter/Space - Continue",
-            "S - Start a new Game",
-            "Arrows - Move the Snake",
-            "Q - Quit"
+            "S  -  Start a new Game",
+            "Q      -     Quit Game"
         ]
-        line_height = self.display_height / 2
+
+        # Continue instruction is left out when the game is over (can't unpause a game that has ended).
+        if not self.brain.game_in_play():
+            instructions = instructions[0:2] + instructions[3:]
+
+        line_height = self.display_height / 3 * 2
         for line in instructions:
-            text = self.game_font.render(line, True, color)
-            self.display.blit(text, [self.display_width / 2.5, line_height])
+            text = self.instructions_font.render(line, True, color)
+            self.display.blit(text, [self.display_width / 2.75, line_height])
             line_height += 30
+
+    # ----------------------------------- COLOR SCHEME METHODS ----------------------------------
+
+    def draw_solid_snake(self) -> None:
+        """
+        Draw a snake using the body color of the color scheme.
+
+        The prerequisite of the method is to check if the color_scheme's color_mode is SOLID.
+        """
+        for pos in self.brain.snake.body_positions:
+            pygame.draw.rect(self.display,
+                             self.color_scheme.body_color,
+                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
+
+    def draw_striped_snake(self) -> None:
+        """
+        Draw the snake starting with the body color and then
+        alternating between that and the secondary color to create a striped snake.
+
+        The prerequisite of the method is to check if the color_scheme's color_mode is STRIPED
+        (otherwise the secondary_color used for the stripes might not be set).
+        """
+        color_list = [self.color_scheme.body_color, self.color_scheme.secondary_color]
+        color_index = 0
+        for pos in self.brain.snake.body_positions:
+            pygame.draw.rect(self.display,
+                             color_list[color_index],
+                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
+            color_index = (color_index + 1) % 2
+
+    def draw_head_snake(self) -> None:
+        """
+        Draw the snake's head (1st block) head color and the rest of the snake with the body color.
+
+        The prerequisite of the method is to check if the color_scheme's color_mode is DIFFERENT_HEAD
+        (otherwise the head_color used for the head might not be set).
+        """
+        head = self.brain.snake.body_positions[0]
+        pygame.draw.rect(self.display,
+                         self.color_scheme.head_color,
+                         self.pixel_rectangle([head[0], head[1], 1, 1]))
+        for pos in self.brain.snake.body_positions[1:]:
+            pygame.draw.rect(self.display,
+                             self.color_scheme.body_color,
+                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
+
+    def draw_tail_snake(self) -> None:
+        """
+        Draw the snake using the body color and the snake's tail (last block) with the tail color.
+
+        The prerequisite of the method is to check if the color_scheme's color_mode is DIFFERENT_TAIL
+        (otherwise the tail_color used for the tail might not be set).
+        """
+        for pos in self.brain.snake.body_positions[:-1]:
+            pygame.draw.rect(self.display,
+                             self.color_scheme.body_color,
+                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
+        tail = self.brain.snake.body_positions[-1]
+        pygame.draw.rect(self.display,
+                         self.color_scheme.tail_color,
+                         self.pixel_rectangle([tail[0], tail[1], 1, 1]))
+
+    def set_color_scheme(self, color_scheme: ColorScheme) -> None:
+        """
+        Set the color scheme of the UI to the custom color_scheme.
+
+        :param color_scheme: Custom color scheme
+        """
+        self.color_scheme = color_scheme
+
+    def set_default_color_scheme(self) -> None:
+        """Set the color scheme to the default colors."""
+        self.color_scheme = ColorScheme.get_default_color_scheme()
+
+    def set_ekans_color_scheme(self) -> None:
+        """Set the color scheme to ekans (Pokémon) theme."""
+        self.color_scheme = ColorScheme.get_ekans_color_scheme()
+
+    def set_python_color_scheme(self) -> None:
+        """Set the color scheme to Python (programming language) logo theme."""
+        self.color_scheme = ColorScheme.get_python_color_scheme()
+
+    def set_slytherin_color_scheme(self) -> None:
+        """Set the color scheme to Slytherin (Harry Potter house) theme colors."""
+        self.color_scheme = ColorScheme.get_slytherin_color_scheme()
 
     # ----------------------------------------- HELPERS -----------------------------------------
 
@@ -150,7 +247,7 @@ class Ui:
         """
         return blocks * self.block_size
 
-    def pixel_rectangle(self, block_rectangle: list[int]) -> list[int]:
+    def pixel_rectangle(self, block_rectangle: list[int, int, int, int]) -> list[int, int, int, int]:
         """
         Convert the rectangle in-game block measurements list to pixel information.
 

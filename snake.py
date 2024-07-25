@@ -14,7 +14,7 @@ class Snake:
     The snake should avoid colliding into its own tail or the game worlds borders as that ends the game.
     """
 
-    def __init__(self, left: int, top: int, step=1, direction=None):
+    def __init__(self, left: int, top: int, step: int = 1, direction: Direction = None):
         """
         Snake constructor method.
 
@@ -64,15 +64,25 @@ class Snake:
         Shift the coordinates by the snake's speed (step).
         Add the new head position to the beginning of the snake's body positions list and
         remove the last element from snake's tail.
+
+        If the snake has just grown then, the last element is duplicate of the one before that.
+        By using the move method, the duplicate element will be eliminated, yet the snake's length has been increased.
         """
         head_x, head_y = self.body_positions[0]
         new_head_position = self.shift_head_coordinates(head_x, head_y)
         self.body_positions = [new_head_position] + self.body_positions[:-1]
 
     def grow(self) -> None:
+        """
+        Add a new segment to the snake's tail by duplicating the current tail position.
+
+        The snake's new and old tail are on the same coordinates.
+        After the grow method, the move method has to be called as during the shifting,
+        the last element of the snake's positions list is removed, therefore getting rid of the duplicate position.
+        """
         self.body_positions.append(self.body_positions[-1])
 
-    def shift_head_coordinates(self, head_x, head_y) -> (int, int):
+    def shift_head_coordinates(self, head_x: int, head_y: int) -> tuple[int, int]:
         """
         Shifts the snakes head's coordinates by the step.
 
@@ -80,14 +90,16 @@ class Snake:
         :param head_y: Snake's head current y-coordinate.
         :return: Snake's head's new coordinates.
         """
-        if self.direction == Direction.RIGHT:
-            head_x += self.step
-        if self.direction == Direction.LEFT:
-            head_x -= self.step
-        if self.direction == Direction.UP:
-            head_y -= self.step
-        if self.direction == Direction.DOWN:
-            head_y += self.step
+        move_x, move_y = {
+            Direction.RIGHT: (self.step, 0),
+            Direction.LEFT: (-self.step, 0),
+            Direction.UP: (0, -self.step),
+            Direction.DOWN: (0, self.step),
+        }.get(self.direction, (0, 0))
+
+        head_x += move_x
+        head_y += move_y
+
         return head_x, head_y
 
     def self_collision_detection(self) -> bool:
@@ -96,7 +108,4 @@ class Snake:
 
         :return: Boolean for whether there has been a collision.
         """
-        for segment in self.body_positions[1:]:
-            if segment == self.body_positions[0]:
-                return True
-        return False
+        return len(self.body_positions) != len(set(self.body_positions))

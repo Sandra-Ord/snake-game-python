@@ -1,27 +1,21 @@
 import pygame
-import colors
 from enums.direction import Direction
 from brain import Brain
 from ui import Ui
-from enums.score_type import ScoreType
 
-# add a color option
 
 def game_loop():
-    game_brain = Brain(80, 60, [2, 2, 2, 2])
+    game_brain = Brain(80, 60, [])
 
-    # Game Initialization
     pygame.init()
 
     ui = Ui(game_brain)
-    # Display Set Up
     pygame.display.set_caption('Snake (Python) Game')
 
-    # Game Clock Set Up
     clock = pygame.time.Clock()
 
     while not game_brain.game_quit:
-        # Game is paused
+
         while game_brain.game_paused:
             ui.draw_game()
             pygame.display.update()
@@ -34,18 +28,19 @@ def game_loop():
                         game_brain.quit_game()
                     elif event.key == pygame.K_s:  # New Game
                         game_brain.restart_game()
+                    elif event.key == pygame.K_z:
+                        ui.set_slytherin_color_scheme()
+                    elif event.key == pygame.K_p:
+                        ui.set_python_color_scheme()
+                    elif event.key == pygame.K_e:
+                        ui.set_ekans_color_scheme()
+                    elif event.key == pygame.K_DELETE:
+                        ui.set_default_color_scheme()
                     break
 
-            if game_brain.game_quit or game_brain.game_paused:
-                continue
-        # todo fix bug
-        # current situation
-        # direction is changed
-        # the snake does not move forward before the change direction is listened again
-        # then when the opposite direction to original is called for
-        # self collision is detected, because the direction is not the opposite anymore
+            if game_brain.game_quit:
+                break
 
-        # Game should not be paused here, but the check is here to ensure it is not paused for the code after
         if game_brain.game_quit or game_brain.game_paused:
             continue
 
@@ -63,14 +58,22 @@ def game_loop():
                     game_brain.snake.change_direction(Direction.UP)
                 elif event.key == pygame.K_DOWN:
                     game_brain.snake.change_direction(Direction.DOWN)
+                elif event.key == pygame.K_z:
+                    ui.set_slytherin_color_scheme()
+                elif event.key == pygame.K_p:
+                    ui.set_python_color_scheme()
+                elif event.key == pygame.K_e:
+                    ui.set_ekans_color_scheme()
+                elif event.key == pygame.K_DELETE:
+                    ui.set_default_color_scheme()
+
+        if game_brain.game_quit or game_brain.game_paused:
+            continue
 
         game_brain.snake.move()
 
         if game_brain.snake_collision_detection():
             game_brain.finish_game()
-
-        if game_brain.game_quit or game_brain.game_paused:
-            continue
 
         ui.draw_game()
         pygame.display.update()

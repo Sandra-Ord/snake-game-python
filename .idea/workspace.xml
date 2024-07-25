@@ -5,9 +5,13 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/brain.py" beforeDir="false" afterPath="$PROJECT_DIR$/brain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/colors.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/direction.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/food.py" beforeDir="false" afterPath="$PROJECT_DIR$/food.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/score_type.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/snake-game.py" beforeDir="false" afterPath="$PROJECT_DIR$/snake-game.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/snake.py" beforeDir="false" afterPath="$PROJECT_DIR$/snake.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/ui.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +53,8 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\sandr\GitHubRepos\snake-game-python\utils" />
+      <recent name="C:\Users\sandr\GitHubRepos\snake-game-python\enums" />
       <recent name="C:\Users\sandr\GitHubRepos\Snake-Game-Python\utils" />
       <recent name="C:\Users\sandr\GitHubRepos\Snake-Game-Python\enums" />
     </key>
@@ -163,7 +169,7 @@
       <workItem from="1721372008654" duration="4346000" />
       <workItem from="1721377782596" duration="19933000" />
       <workItem from="1721677403289" duration="32449000" />
-      <workItem from="1721933768098" duration="1543000" />
+      <workItem from="1721933768098" duration="2029000" />
     </task>
     <servers />
   </component>

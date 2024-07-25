@@ -45,8 +45,7 @@ class Brain:
         self.display_width = self.left_border + game_area_width + self.right_border  # total width of the display
         self.display_height = self.top_border + game_area_height + self.bottom_border  # total height of the display
 
-        if (self.display_width < self.top_border + self.bottom_border + 2
-                or self.display_height < self.left_border + self.right_border + 2):
+        if self.game_area_width < 2 or self.game_area_height < 2:
             raise ValueError("Game field area is too small, there must be at least 2x2 blocks inside the borders.")
 
         self.game_paused = True
@@ -67,19 +66,19 @@ class Brain:
         """Check if the snake has reached the maximum capacity of the game board."""
         return self.snake.length() >= self.game_area_width * self.game_area_height
 
-    def reset_score(self):
+    def reset_score(self) -> None:
         """Set the current_score to 0 points."""
         self.current_score = 0
 
-    def set_high_score(self):
+    def set_high_score(self) -> None:
         """Take the maximum value between the current_score and high_score and assigns it as the new high score."""
         self.high_score = max(self.current_score, self.high_score)
 
-    def pause_game(self):
+    def pause_game(self) -> None:
         """Set the game_paused value to True."""
         self.game_paused = True
 
-    def unpause_game(self):
+    def unpause_game(self) -> None:
         """
         Set the game_paused value to False.
 
@@ -89,11 +88,11 @@ class Brain:
             return
         self.game_paused = False
 
-    def start_game(self):
+    def start_game(self) -> None:
         """Set the game_status to Ongoing."""
         self.game_status = GameStatus.ONGOING
 
-    def end_game(self):
+    def end_game(self) -> None:
         """
         Change the game status to Lost or Won.
 
@@ -104,7 +103,7 @@ class Brain:
         else:
             self.game_status = GameStatus.LOST
 
-    def quit_game(self):
+    def quit_game(self) -> None:
         """Set the game_quit value to True."""
         self.game_quit = True
 
@@ -125,7 +124,7 @@ class Brain:
         """
         return self.game_status == GameStatus.ONGOING
 
-    def get_borders(self) -> []:
+    def get_borders(self) -> list[list[int, int, int, int]]:
         """
         List of border rectangles.
 
@@ -144,8 +143,6 @@ class Brain:
         :return: Generated food object.
         """
         # todo leave out the snake's positions from the random generation.
-        # maybe could be implemented with a list of all the game board block coordinates
-        # from which the snakes position is subtracted
         self.food = Food(random.randrange(0 + self.left_border, self.display_width - self.right_border, 1),
                          random.randrange(0 + self.top_border, self.display_height - self.bottom_border, 1))
         return self.food
@@ -180,18 +177,18 @@ class Brain:
         """
         return self.snake.body_positions[0] == (self.food.x_coordinate, self.food.y_coordinate)
 
-    def snake_eat(self):
+    def snake_eat(self) -> None:
         """Grow the snake and add the food's score points to the current score."""
         # todo should the previous food be set to None?
         self.snake.grow()
         self.current_score += self.food.score
 
-    def finish_game(self):
+    def finish_game(self) -> None:
         """Pause and end the current game."""
         self.pause_game()
         self.end_game()
 
-    def restart_game(self):
+    def restart_game(self) -> None:
         """
         Start a new game.
 
