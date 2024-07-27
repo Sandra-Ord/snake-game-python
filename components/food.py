@@ -31,5 +31,6 @@ class Food:
         self.lifetime = lifetime
 
     def decrease_lifetime(self) -> None:
+        """Decrease the lifetime, if it has been set."""
         if self.lifetime is not None and self.lifetime > 0:
             self.lifetime -= 1

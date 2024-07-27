@@ -34,3 +34,26 @@ PYTHON_WHITE = (255, 255, 255)
 SLYTHERIN_GREEN = (29, 116, 82)
 SLYTHERIN_SILVER = (222, 231, 230)
 SLYTHERIN_GOLD = (238, 195, 55)
+
+"""Color constants for the Rainbow color scheme snake game."""
+
+RAINBOW_RED = (255, 0, 0)
+RAINBOW_ORANGE = (255, 127, 0)
+RAINBOW_YELLOW = (255, 255, 0)
+RAINBOW_GREEN = (0, 255, 0)
+RAINBOW_BLUE = (0, 0, 255)
+RAINBOW_INDIGO = (75, 0, 130)
+
+"""Color constants for the Pastel Rainbow color scheme snake game."""
+
+PASTEL_RED = (255, 179, 186)
+PASTEL_ORANGE = (255, 223, 186)
+PASTEL_YELLOW = (255, 255, 186)
+PASTEL_GREEN = (186, 255, 201)
+PASTEL_BLUE = (186, 225, 255)
+
+"""Color constants for the Estonia flag color scheme snake game."""
+
+ESTONIA_BLUE = (0, 114, 206)
+ESTONIA_BLACK = (66, 66, 66)
+ESTONIA_WHITE = (255, 255, 255)

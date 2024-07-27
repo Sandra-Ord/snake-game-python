@@ -16,55 +16,25 @@ class ColorScheme:
     def __init__(self, scheme_name: str,
                  color_mode: ColorMode,
                  food_color: tuple[int, int, int],
-                 main_color: tuple[int, int, int],
-                 secondary_color: tuple[int, int, int] = None,
+                 pattern: list[tuple[int, int, int]],
+                 head_color: tuple[int, int, int] = None,
+                 tail_color: tuple[int, int, int] = None,
                  text_color: tuple[int, int, int] = None):
         """
-        Color Scheme constructor.
 
-        The color scheme has 4 different modes:
-            * SOLID,
-            * STRIPED,
-            * DIFFERENT_HEAD,
-            * DIFFERENT_TAIL.
-
-        SOLID mode uses the main_color to color the whole snake,
-        from the head to the tail.
-
-        STRIPED mode starts coloring the snake from the head with the main_color and
-        then switches between that and secondary_color until the end of the snake.
-
-        DIFFERENT_HEAD mode colors the snake's head with the secondary_color and
-        the rest with the main_color.
-
-        DIFFERENT_TAIL mode colors the snake's tail with the secondary_color and
-        the rest with the main_color.
-
-        :param scheme_name: Name that can be displayed on the UI, to clarify the scheme's meaning to the user.
-        :param color_mode: Color mode to distinguish, how the colors are supposed to be displayed on the snake
-                            (SOLID/STRIPED/DIFFERENT_HEAD/DIFFERENT_TAIL).
-        :param food_color: Color of the snake's food.
-        :param main_color: Main color of the snake's body (for STRIPED the coloring starts from the main_color).
-        :param secondary_color: Snake's head's or tail's color or the second stripe's color
-        :param text_color: Color that the scheme_name should be displayed in - by default the main snake color.
         """
         self.scheme_name = scheme_name
 
         self.color_mode = color_mode
 
-        self.head_color = self.body_color = self.secondary_color = self.tail_color = None
+        self.head_color = head_color
+        self.tail_color = tail_color
+
         self.food_color = food_color
 
-        self.body_color = main_color
+        self.body_pattern = pattern
 
-        self.text_color = self.body_color if text_color is None else text_color
-
-        if self.color_mode == ColorMode.STRIPED:
-            self.secondary_color = secondary_color
-        elif self.color_mode == ColorMode.DIFFERENT_HEAD:
-            self.head_color = secondary_color
-        elif self.color_mode == ColorMode.DIFFERENT_TAIL:
-            self.tail_color = secondary_color
+        self.text_color = text_color if text_color is not None else colors.BLACK
 
     @staticmethod
     def get_default_color_scheme():
@@ -78,7 +48,9 @@ class ColorScheme:
         return ColorScheme("Classic",
                            ColorMode.SOLID,
                            colors.RED,
-                           colors.GREEN,
+                           [colors.GREEN],
+                           None,
+                           None,
                            colors.BLACK)
 
     @staticmethod
@@ -91,10 +63,12 @@ class ColorScheme:
         :return: Color Scheme object with the ekans color scheme property values.
         """
         return ColorScheme("ekans",
-                           ColorMode.DIFFERENT_TAIL,
+                           ColorMode.SOLID,
                            colors.EKANS_GREEN,
-                           colors.EKANS_PURPLE,
-                           colors.EKANS_YELLOW)
+                           [colors.EKANS_PURPLE],
+                           None,
+                           colors.EKANS_YELLOW,
+                           colors.EKANS_PURPLE)
 
     @staticmethod
     def get_python_color_scheme():
@@ -106,10 +80,12 @@ class ColorScheme:
         :return: Color Scheme object with the Python color scheme property values.
         """
         return ColorScheme("Python",
-                           ColorMode.STRIPED,
+                           ColorMode.PATTERN_REPEAT,
                            colors.PYTHON_WHITE,
-                           colors.PYTHON_BLUE,
-                           colors.PYTHON_YELLOW)
+                           [colors.PYTHON_BLUE, colors.PYTHON_YELLOW],
+                           None,
+                           None,
+                           colors.PYTHON_BLUE)
 
     @staticmethod
     def get_slytherin_color_scheme():
@@ -121,8 +97,71 @@ class ColorScheme:
         :return: Color Scheme object with the Slytherin color scheme property values.
         """
         return ColorScheme("Slytherin",
-                           ColorMode.DIFFERENT_HEAD,
+                           ColorMode.SOLID,
                            colors.SLYTHERIN_GOLD,
-                           colors.SLYTHERIN_SILVER,
+                           [colors.SLYTHERIN_SILVER],
                            colors.SLYTHERIN_GREEN,
+                           None,
                            colors.SLYTHERIN_GREEN)
+
+    @staticmethod
+    def get_rainbow_color_scheme():
+        """
+        Vibrant rainbow color scheme:
+            * Snake is a repeating rainbow pattern,
+            * Food is white.
+
+        :return: Color Scheme object with the Rainbow color scheme property values.
+        """
+        return ColorScheme("Rainbow",
+                           ColorMode.PATTERN_REPEAT,
+                           colors.WHITE,
+                           [colors.RAINBOW_RED,
+                            colors.RAINBOW_ORANGE,
+                            colors.RAINBOW_YELLOW,
+                            colors.RAINBOW_GREEN,
+                            colors.RAINBOW_BLUE,
+                            colors.RAINBOW_INDIGO],
+                           None,
+                           None,
+                           colors.BLACK)
+
+    @staticmethod
+    def get_pastel_rainbow_color_scheme():
+        """
+        Pastel rainbow color scheme:
+            * Snake is a repeating rainbow pattern,
+            * Food is white.
+
+        :return: Color Scheme object with the Pastel Rainbow color scheme property values.
+        """
+        return ColorScheme("Pastel",
+                           ColorMode.PATTERN_REPEAT,
+                           colors.WHITE,
+                           [colors.PASTEL_RED,
+                            colors.PASTEL_ORANGE,
+                            colors.PASTEL_YELLOW,
+                            colors.PASTEL_GREEN,
+                            colors.PASTEL_BLUE],
+                           None,
+                           None,
+                           colors.BLACK)
+
+    @staticmethod
+    def get_estonia_color_scheme():
+        """
+        Estonia color scheme:
+            * Snake is a repeating pattern of the Estonian flag colors,
+            * Food is blue.
+
+        :return: Color Scheme object with the Rainbow color scheme property values.
+        """
+        return ColorScheme("Estonia",
+                           ColorMode.PATTERN_REPEAT,
+                           colors.ESTONIA_BLUE,
+                           [colors.ESTONIA_BLUE,
+                            colors.ESTONIA_BLACK,
+                            colors.ESTONIA_WHITE],
+                           None,
+                           None,
+                           colors.BLACK)

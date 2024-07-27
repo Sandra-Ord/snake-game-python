@@ -151,7 +151,6 @@ class Brain:
 
         # Random chance for special food
         rand_value = random.random()  # Generates a float between 0.0 and 1.0
-        print(rand_value)
         if rand_value < 0.01:  # 1% chance for 50 points
             score = 50
         elif rand_value < 0.05:  # 4% chance for 10 points (totaling 5% with the previous chance)
@@ -238,5 +237,6 @@ class Brain:
         self.set_high_score()
         self.reset_score()
         self.snake = self.new_snake()
+        self.food = self.generate_food()
         self.pause_game()
         self.start_game()

@@ -1,10 +1,10 @@
 import pygame
 from components.brain import Brain
 from utils import colors
-from utils.color_scheme import ColorScheme
 from enums.color_mode import ColorMode
 from enums.game_status import GameStatus
 from enums.score_type import ScoreType
+from utils.color_scheme import ColorScheme
 
 
 class Ui:
@@ -82,14 +82,29 @@ class Ui:
 
     def draw_snake(self) -> None:
         """Draw the snake block by block according to the color scheme."""
-        if self.color_scheme.color_mode == ColorMode.SOLID:
-            self.draw_solid_snake()
-        elif self.color_scheme.color_mode == ColorMode.STRIPED:
-            self.draw_striped_snake()
-        elif self.color_scheme.color_mode == ColorMode.DIFFERENT_HEAD:
-            self.draw_head_snake()
-        elif self.color_scheme.color_mode == ColorMode.DIFFERENT_TAIL:
-            self.draw_tail_snake()
+        snake_index = 0
+        if self.color_scheme.head_color is not None:
+            head = self.brain.snake.body_positions[snake_index]
+            pygame.draw.rect(self.display,
+                             self.color_scheme.head_color,
+                             self.pixel_rectangle([head[0], head[1], 1, 1]))
+            snake_index += 1
+
+        pattern_index = 0
+        pattern_end = self.brain.snake.length() \
+            if self.color_scheme.tail_color is None \
+            else self.brain.snake.length() - 1
+        for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
+            pygame.draw.rect(self.display,
+                             self.color_scheme.body_pattern[pattern_index],
+                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
+            pattern_index = (pattern_index + 1) % len(self.color_scheme.body_pattern)
+
+        if self.color_scheme.tail_color is not None:
+            tail = self.brain.snake.body_positions[-1]
+            pygame.draw.rect(self.display,
+                             self.color_scheme.tail_color,
+                             self.pixel_rectangle([tail[0], tail[1], 1, 1]))
 
     def draw_food(self) -> None:
         """Draw the food block using the food color of the color scheme."""
@@ -154,88 +169,41 @@ class Ui:
 
     # ----------------------------------- COLOR SCHEME METHODS ----------------------------------
 
-    def draw_solid_snake(self) -> None:
-        """
-        Draw a snake using the body color of the color scheme.
-
-        The prerequisite of the method is to check if the color_scheme's color_mode is SOLID.
-        """
-        for pos in self.brain.snake.body_positions:
-            pygame.draw.rect(self.display,
-                             self.color_scheme.body_color,
-                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-
-    def draw_striped_snake(self) -> None:
-        """
-        Draw the snake starting with the body color and then
-        alternating between that and the secondary color to create a striped snake.
-
-        The prerequisite of the method is to check if the color_scheme's color_mode is STRIPED
-        (otherwise the secondary_color used for the stripes might not be set).
-        """
-        color_list = [self.color_scheme.body_color, self.color_scheme.secondary_color]
-        color_index = 0
-        for pos in self.brain.snake.body_positions:
-            pygame.draw.rect(self.display,
-                             color_list[color_index],
-                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-            color_index = (color_index + 1) % 2
-
-    def draw_head_snake(self) -> None:
-        """
-        Draw the snake's head (1st block) head color and the rest of the snake with the body color.
-
-        The prerequisite of the method is to check if the color_scheme's color_mode is DIFFERENT_HEAD
-        (otherwise the head_color used for the head might not be set).
-        """
-        head = self.brain.snake.body_positions[0]
-        pygame.draw.rect(self.display,
-                         self.color_scheme.head_color,
-                         self.pixel_rectangle([head[0], head[1], 1, 1]))
-        for pos in self.brain.snake.body_positions[1:]:
-            pygame.draw.rect(self.display,
-                             self.color_scheme.body_color,
-                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-
-    def draw_tail_snake(self) -> None:
-        """
-        Draw the snake using the body color and the snake's tail (last block) with the tail color.
-
-        The prerequisite of the method is to check if the color_scheme's color_mode is DIFFERENT_TAIL
-        (otherwise the tail_color used for the tail might not be set).
-        """
-        for pos in self.brain.snake.body_positions[:-1]:
-            pygame.draw.rect(self.display,
-                             self.color_scheme.body_color,
-                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-        tail = self.brain.snake.body_positions[-1]
-        pygame.draw.rect(self.display,
-                         self.color_scheme.tail_color,
-                         self.pixel_rectangle([tail[0], tail[1], 1, 1]))
-
-    def set_color_scheme(self, color_scheme: ColorScheme) -> None:
+    def set_color_palette(self, color_palette: ColorScheme) -> None:
         """
         Set the color scheme of the UI to the custom color_scheme.
 
         :param color_scheme: Custom color scheme
         """
-        self.color_scheme = color_scheme
+        self.color_scheme = color_palette
 
     def set_default_color_scheme(self) -> None:
         """Set the color scheme to the default colors."""
-        self.color_scheme = ColorScheme.get_default_color_scheme()
+        self.set_color_palette(ColorScheme.get_default_color_scheme())
 
     def set_ekans_color_scheme(self) -> None:
         """Set the color scheme to ekans (Pokémon) theme."""
-        self.color_scheme = ColorScheme.get_ekans_color_scheme()
+        self.set_color_palette(ColorScheme.get_ekans_color_scheme())
 
     def set_python_color_scheme(self) -> None:
         """Set the color scheme to Python (programming language) logo theme."""
-        self.color_scheme = ColorScheme.get_python_color_scheme()
+        self.set_color_palette(ColorScheme.get_python_color_scheme())
 
     def set_slytherin_color_scheme(self) -> None:
         """Set the color scheme to Slytherin (Harry Potter house) theme colors."""
-        self.color_scheme = ColorScheme.get_slytherin_color_scheme()
+        self.set_color_palette(ColorScheme.get_slytherin_color_scheme())
+
+    def set_rainbow_color_scheme(self) -> None:
+        """Set the color scheme to Vibrant Rainbow colors."""
+        self.set_color_palette(ColorScheme.get_rainbow_color_scheme())
+
+    def set_pastel_rainbow_color_scheme(self) -> None:
+        """Set the color scheme to Pastel Rainbow colors."""
+        self.set_color_palette(ColorScheme.get_pastel_rainbow_color_scheme())
+
+    def set_estonia_color_scheme(self) -> None:
+        """Set the color scheme to Estonia flag colors."""
+        self.set_color_palette(ColorScheme.get_estonia_color_scheme())
 
     # ----------------------------------------- HELPERS -----------------------------------------
 
