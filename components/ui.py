@@ -83,36 +83,48 @@ class Ui:
     def draw_snake(self) -> None:
         """Draw the snake block by block according to the color scheme."""
         snake_index = 0
+
+        # Draw the head
         if self.color_scheme.head_color is not None:
-            head = self.brain.snake.body_positions[snake_index]
-            pygame.draw.rect(self.display,
-                             self.color_scheme.head_color,
-                             self.pixel_rectangle([head[0], head[1], 1, 1]))
+            self.draw_snake_position(self.brain.snake.get_head_position(), self.color_scheme.head_color)
             snake_index += 1
 
         pattern_index = 0
+        pattern = self.color_scheme.body_pattern
+        pattern_length = len(pattern)
+
         pattern_end = self.brain.snake.length() \
             if self.color_scheme.tail_color is None \
             else self.brain.snake.length() - 1
-        for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
-            pygame.draw.rect(self.display,
-                             self.color_scheme.body_pattern[pattern_index],
-                             self.pixel_rectangle([pos[0], pos[1], 1, 1]))
-            pattern_index = (pattern_index + 1) % len(self.color_scheme.body_pattern)
+
+        if self.color_scheme.color_mode == ColorMode.PATTERN_ONCE:
+            segment_lengths = [self.brain.snake.length() // pattern_length] * pattern_length
+            extra_segment = self.brain.snake.length() % pattern_length
+
+            for i in range(extra_segment):
+                segment_lengths[i] += 1
+
+            for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
+                if segment_lengths[pattern_index] > 0:
+                    self.draw_snake_position(pos, pattern[pattern_index])
+                    segment_lengths[pattern_index] -= 1
+                    if segment_lengths[pattern_index] <= 0:
+                        pattern_index += 1
+
+        else:
+            for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
+                self.draw_snake_position(pos, self.color_scheme.body_pattern[pattern_index])
+                pattern_index = (pattern_index + 1) % len(self.color_scheme.body_pattern)
 
         if self.color_scheme.tail_color is not None:
-            tail = self.brain.snake.body_positions[-1]
-            pygame.draw.rect(self.display,
-                             self.color_scheme.tail_color,
-                             self.pixel_rectangle([tail[0], tail[1], 1, 1]))
+            self.draw_snake_position(self.brain.snake.get_tail_position(), self.color_scheme.tail_color)
 
     def draw_food(self) -> None:
         """Draw the food block using the food color of the color scheme."""
         food_x, food_y = self.brain.food.x_coordinate, self.brain.food.y_coordinate
-        food_color = self.color_scheme.food_color
-        if self.brain.food.lifetime is not None:
-            food_color = self.get_special_food_color(self.brain.food.lifetime)
-        pygame.draw.rect(self.display, food_color, self.pixel_rectangle([food_x, food_y, 1, 1]))
+        food_color = self.color_scheme.food_color if self.brain.food.lifetime is None \
+            else self.get_special_food_color(self.brain.food.lifetime)
+        self.draw_rectangle([food_x, food_y, 1, 1], food_color)
 
     def display_score(self, score_type: ScoreType = ScoreType.CURRENT,
                       x: int = 0, y: int = 0,
@@ -127,13 +139,14 @@ class Ui:
         :param color: Color of the text.
         """
         score = self.brain.high_score if score_type is ScoreType.HIGH else self.brain.current_score
-        text = self.score_font.render(score_tag_text + str(score), True, color)
-        self.display.blit(text, [x, y])
+        self.display_text(score_tag_text + str(score), self.score_font, color, x, y)
 
     def display_scheme_name(self) -> None:
         """Display the name of the color scheme at the top of the screen."""
-        text = self.score_font.render(self.color_scheme.scheme_name, True, self.color_scheme.text_color)
-        self.display.blit(text, [self.display_width / 2.5, 0])
+        self.display_text(self.color_scheme.scheme_name,
+                          self.score_font,
+                          self.color_scheme.text_color,
+                          self.display_width / 2.5, 0)
 
     def display_game_status(self, color=colors.WHITE) -> None:
         """Display the game status (Paused/Lost/Won) when the game is not currently active."""
@@ -144,8 +157,7 @@ class Ui:
                 GameStatus.WON: "Game Won"
             }.get(self.brain.game_status, "")
 
-            text = self.game_font.render(status_text, True, color)
-            self.display.blit(text, [self.display_width / 2.5, self.display_height / 3])
+            self.display_text(status_text, self.game_font, color, self.display_width / 2.5, self.display_height / 3)
 
     def display_instructions(self, color=colors.WHITE) -> None:
         """Display the instructions of the game, depending on the state and what actions are allowed."""
@@ -163,49 +175,67 @@ class Ui:
 
         line_height = self.display_height / 3 * 2
         for line in instructions:
-            text = self.instructions_font.render(line, True, color)
-            self.display.blit(text, [self.display_width / 2.75, line_height])
+            self.display_text(line, self.instructions_font, color, self.display_width / 2.75, line_height)
             line_height += 30
 
     # ----------------------------------- COLOR SCHEME METHODS ----------------------------------
 
-    def set_color_palette(self, color_palette: ColorScheme) -> None:
+    def set_color_scheme(self, color_scheme: ColorScheme) -> None:
         """
         Set the color scheme of the UI to the custom color_scheme.
 
         :param color_scheme: Custom color scheme
         """
-        self.color_scheme = color_palette
+        self.color_scheme = color_scheme
+
+    def toggle_color_scheme_repeat(self) -> None:
+        """
+        Toggle the color scheme of the UI between PATTERN_REPEAT and PATTERN_ONCE.
+        """
+        if self.color_scheme.color_mode == ColorMode.PATTERN_REPEAT:
+            self.color_scheme.color_mode = ColorMode.PATTERN_ONCE
+        elif self.color_scheme.color_mode == ColorMode.PATTERN_ONCE:
+            self.color_scheme.color_mode = ColorMode.PATTERN_REPEAT
 
     def set_default_color_scheme(self) -> None:
         """Set the color scheme to the default colors."""
-        self.set_color_palette(ColorScheme.get_default_color_scheme())
+        self.set_color_scheme(ColorScheme.get_default_color_scheme())
 
     def set_ekans_color_scheme(self) -> None:
         """Set the color scheme to ekans (Pokémon) theme."""
-        self.set_color_palette(ColorScheme.get_ekans_color_scheme())
+        self.set_color_scheme(ColorScheme.get_ekans_color_scheme())
 
     def set_python_color_scheme(self) -> None:
         """Set the color scheme to Python (programming language) logo theme."""
-        self.set_color_palette(ColorScheme.get_python_color_scheme())
+        self.set_color_scheme(ColorScheme.get_python_color_scheme())
 
     def set_slytherin_color_scheme(self) -> None:
         """Set the color scheme to Slytherin (Harry Potter house) theme colors."""
-        self.set_color_palette(ColorScheme.get_slytherin_color_scheme())
+        self.set_color_scheme(ColorScheme.get_slytherin_color_scheme())
 
     def set_rainbow_color_scheme(self) -> None:
         """Set the color scheme to Vibrant Rainbow colors."""
-        self.set_color_palette(ColorScheme.get_rainbow_color_scheme())
+        self.set_color_scheme(ColorScheme.get_rainbow_color_scheme())
 
     def set_pastel_rainbow_color_scheme(self) -> None:
         """Set the color scheme to Pastel Rainbow colors."""
-        self.set_color_palette(ColorScheme.get_pastel_rainbow_color_scheme())
+        self.set_color_scheme(ColorScheme.get_pastel_rainbow_color_scheme())
 
     def set_estonia_color_scheme(self) -> None:
         """Set the color scheme to Estonia flag colors."""
-        self.set_color_palette(ColorScheme.get_estonia_color_scheme())
+        self.set_color_scheme(ColorScheme.get_estonia_color_scheme())
 
     # ----------------------------------------- HELPERS -----------------------------------------
+
+    def draw_snake_position(self, position: tuple[int, int], color: tuple[int, int, int]) -> None:
+        self.draw_rectangle([position[0], position[1], 1, 1], color)
+
+    def draw_rectangle(self, block_rectangle: list[int, int, int, int], color: tuple[int, int, int]) -> None:
+        pygame.draw.rect(self.display, color, self.pixel_rectangle(block_rectangle))
+
+    def display_text(self, text: str, font, color, x, y) -> None:
+        text = font.render(text, True, color)
+        self.display.blit(text, [x, y])
 
     def blocks_to_pixels(self, blocks: int) -> int:
         """

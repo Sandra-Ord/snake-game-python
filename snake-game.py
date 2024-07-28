@@ -22,9 +22,7 @@ def game_loop():
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
 
-                if event.key == pygame.K_q:
-                    game_brain.quit_game()
-                elif event.key == pygame.K_z:
+                if event.key == pygame.K_z:
                     ui.set_slytherin_color_scheme()
                 elif event.key == pygame.K_p:
                     ui.set_python_color_scheme()
@@ -38,10 +36,14 @@ def game_loop():
                     ui.set_estonia_color_scheme()
                 elif event.key == pygame.K_DELETE:
                     ui.set_default_color_scheme()
+                elif event.key == pygame.K_CAPSLOCK:
+                    ui.toggle_color_scheme_repeat()
 
                 # Paused Game Controls
                 if game_brain.game_paused:
-                    if event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # Continue Game
+                    if event.key == pygame.K_ESCAPE:
+                        game_brain.quit_game()
+                    elif event.key == pygame.K_SPACE or event.key == pygame.K_RETURN:  # Continue Game
                         game_brain.unpause_game()
                     elif event.key == pygame.K_s:
                         game_brain.restart_game()

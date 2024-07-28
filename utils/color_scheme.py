@@ -154,7 +154,7 @@ class ColorScheme:
             * Snake is a repeating pattern of the Estonian flag colors,
             * Food is blue.
 
-        :return: Color Scheme object with the Rainbow color scheme property values.
+        :return: Color Scheme object with the Estonia flag colors scheme property values.
         """
         return ColorScheme("Estonia",
                            ColorMode.PATTERN_REPEAT,

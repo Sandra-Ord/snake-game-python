@@ -68,7 +68,7 @@ class Snake:
         If the snake has just grown then, the last element is duplicate of the one before that.
         By using the move method, the duplicate element will be eliminated, yet the snake's length has been increased.
         """
-        head_x, head_y = self.body_positions[0]
+        head_x, head_y = self.get_head_position()
         new_head_position = self.shift_head_coordinates(head_x, head_y)
         self.body_positions = [new_head_position] + self.body_positions[:-1]
 
@@ -80,7 +80,7 @@ class Snake:
         After the grow method, the move method has to be called as during the shifting,
         the last element of the snake's positions list is removed, therefore getting rid of the duplicate position.
         """
-        self.body_positions.append(self.body_positions[-1])
+        self.body_positions.append(self.get_tail_position())
 
     def shift_head_coordinates(self, head_x: int, head_y: int) -> tuple[int, int]:
         """
@@ -109,3 +109,12 @@ class Snake:
         :return: Boolean for whether there has been a collision.
         """
         return len(self.body_positions) != len(set(self.body_positions))
+
+    def get_body_position(self, position_index: int) -> tuple[int, int]:
+        return self.body_positions[position_index]
+
+    def get_head_position(self) -> tuple[int, int]:
+        return self.get_body_position(0)
+
+    def get_tail_position(self) -> tuple[int, int]:
+        return self.get_body_position(-1)
