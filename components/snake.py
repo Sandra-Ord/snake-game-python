@@ -1,3 +1,4 @@
+from utils.coordinate_utils import validate_coordinates
 import random
 
 from enums.direction import Direction
@@ -22,8 +23,10 @@ class Snake:
         :param top: Snake block's top edge y-coordinate measured in in-game blocks.
         :param step: Defines how many in-game blocks the snake should move forward at once.
         :param direction: Snake's starting direction.
-                            If a direction is not provided, the snake will start in a random direction.
+                          If a direction is not provided, the snake will start in a random direction.
         """
+        validate_coordinates((left, top))
+
         self.body_positions = [(left, top)]
 
         self.step = step
@@ -33,11 +36,7 @@ class Snake:
         self.direction = direction
 
     def length(self) -> int:
-        """
-        The length of the snake measured in in-game blocks.
-
-        :return:Length of the snake
-        """
+        """Length of the snake in in-game blocks."""
         return len(self.body_positions)
 
     def change_direction(self, new_direction: Direction) -> None:
@@ -47,15 +46,10 @@ class Snake:
             to any directions that is not the opposite of the previous direction,
             as that would result in the snake turning into itself.
 
-        :param new_direction: direction the snake will turn to and keep moving in.
+        :param new_direction: New direction of the snake.
         """
-        opposite_directions = {
-            Direction.RIGHT: Direction.LEFT,
-            Direction.LEFT: Direction.RIGHT,
-            Direction.UP: Direction.DOWN,
-            Direction.DOWN: Direction.UP,
-        }
-        if self.length == 1 or self.direction != new_direction and new_direction != opposite_directions[self.direction]:
+        if self.length() == 1 or (self.direction != new_direction and
+                                  new_direction != self.opposite_direction(self.direction)):
             self.direction = new_direction
 
     def move(self) -> None:
@@ -77,44 +71,55 @@ class Snake:
         Add a new segment to the snake's tail by duplicating the current tail position.
 
         The snake's new and old tail are on the same coordinates.
-        After the grow method, the move method has to be called as during the shifting,
+        After the grow() method, the move() method has to be called, since during the shifting in move(),
         the last element of the snake's positions list is removed, therefore getting rid of the duplicate position.
         """
         self.body_positions.append(self.get_tail_position())
 
     def shift_head_coordinates(self, head_x: int, head_y: int) -> tuple[int, int]:
         """
-        Shifts the snakes head's coordinates by the step.
+        Computes the new head position based on the current direction.
 
-        :param head_x: Snake's head current x-coordinate.
-        :param head_y: Snake's head current y-coordinate.
-        :return: Snake's head's new coordinates.
+        :param head_x: Snake head's current x-coordinate.
+        :param head_y: Snake head's current y-coordinate.
+        :return: Snake head's new coordinates.
         """
-        move_x, move_y = {
+        direction_moves = {
             Direction.RIGHT: (self.step, 0),
             Direction.LEFT: (-self.step, 0),
             Direction.UP: (0, -self.step),
             Direction.DOWN: (0, self.step),
-        }.get(self.direction, (0, 0))
-
-        head_x += move_x
-        head_y += move_y
-
-        return head_x, head_y
+        }
+        move_x, move_y = direction_moves.get(self.direction, (0, 0))
+        return head_x + move_x, head_y + move_y
 
     def self_collision_detection(self) -> bool:
-        """
-        Detects if the snake has collided into itself.
-
-        :return: Boolean for whether there has been a collision.
-        """
+        """Detect if the snake has collided into itself."""
         return len(self.body_positions) != len(set(self.body_positions))
 
     def get_body_position(self, position_index: int) -> tuple[int, int]:
+        """
+        Get the snake position's coordinates (x, y).
+
+        :param position_index: Index of the snake position, for which to get the coordinates.
+        """
         return self.body_positions[position_index]
 
     def get_head_position(self) -> tuple[int, int]:
+        """Get the coordinates (x, y) of the snake head's ."""
         return self.get_body_position(0)
 
     def get_tail_position(self) -> tuple[int, int]:
+        """Get the coordinates (x, y) of the snake tail's."""
         return self.get_body_position(-1)
+
+    @staticmethod
+    def opposite_direction(direction: Direction) -> Direction:
+        """Returns the opposite direction."""
+        opposite_directions = {
+            Direction.RIGHT: Direction.LEFT,
+            Direction.LEFT: Direction.RIGHT,
+            Direction.UP: Direction.DOWN,
+            Direction.DOWN: Direction.UP,
+        }
+        return opposite_directions[direction]

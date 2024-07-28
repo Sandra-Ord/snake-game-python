@@ -48,6 +48,9 @@ class Brain:
         if self.game_area_width < 2 or self.game_area_height < 2:
             raise ValueError("Game field area is too small, there must be at least 2x2 blocks inside the borders.")
 
+        self.game_area_positions = set((x, y) for x in range(self.left_border, self.display_width - self.right_border)
+                                       for y in range(self.top_border, self.display_height - self.bottom_border))
+
         self.game_paused = True
         self.game_status = GameStatus.ONGOING
         self.game_quit = False
@@ -116,12 +119,7 @@ class Brain:
         return self.game_status == GameStatus.WON
 
     def game_in_play(self) -> bool:
-        """
-        Check if the game is currently in play.
-
-        :return: True, if the game is currently ongoing.
-                 False, if the game has ended and has a result (lost/won).
-        """
+        """Check if the game is currently in play."""
         return self.game_status == GameStatus.ONGOING
 
     def get_borders(self) -> list[list[int, int, int, int]]:
@@ -138,12 +136,21 @@ class Brain:
     def generate_food(self) -> Food:
         """
         Generate a new food in a random location on the game board and assign it as the game's current food.
-        Location is generated randomly and checked to ensure, that it was not generated under the snake's positions.
+
+        Location is selected randomly from the available parts of the game board.
+
+        There is a 15% chance of generating a superfood, that
+        is worth more points and
+        has a set lifetime (The amount of steps, that the snake can take, until the food will disappear).
+
+        10% chance - Food is generated that is worth 5 points,
+        4% chance - Food is generated that is worth 10 points,
+        1% chance - Food is generated that is worth 50 points.
 
         :return: Generated food object.
         """
-        x_coordinate = random.randrange(self.left_border, self.display_width - self.right_border)
-        y_coordinate = random.randrange(self.top_border, self.display_height - self.bottom_border)
+
+        x_coordinate, y_coordinate = self.select_random_position()
 
         # Default food score
         score = 1
@@ -160,9 +167,16 @@ class Brain:
         else:
             lifetime = None
 
-        # todo leave out the snake's positions from the random generation.
         self.food = Food(x_coordinate, y_coordinate, score, lifetime)
         return self.food
+
+    def select_random_position(self) -> tuple[int, int]:
+        """Select a random available position (x, y) on the game board, e.g. for food generation."""
+        return random.choice(list(self.get_free_positions()))
+
+    def get_free_positions(self) -> set[tuple[int, int]]:
+        """Get a set of the available coordinates on the game board, that are not occupied by the snake's body."""
+        return self.game_area_positions - set(self.snake.body_positions)
 
     def snake_collision_detection(self) -> bool:
         """
@@ -196,9 +210,9 @@ class Brain:
 
     def snake_eat(self) -> None:
         """Grow the snake and add the food's score points to the current score."""
-        # todo should the previous food be set to None?
         self.snake.grow()
         self.current_score += self.food.score
+        self.food = None
 
     def snake_move(self) -> None:
         self.snake.move()
@@ -213,7 +227,8 @@ class Brain:
             # By commenting this in, the game will end the moment the snake reaches its maximum capacity
             # if self.snake_at_max_capacity():
             #     self.finish_game()
-            self.generate_food()
+            if not self.snake_at_max_capacity():
+                self.generate_food()
 
         elif self.food.lifetime is not None:
             self.food.decrease_lifetime()

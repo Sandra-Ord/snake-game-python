@@ -1,8 +1,11 @@
+from utils.coordinate_utils import validate_coordinates
+
+
 class Food:
     """
     Snake Food class.
 
-    Food is an element in the snake game, which appears in random locations on the game board.
+    Food is an element in the snake game, which appear in random locations on the game board.
     Snake has to make its way to the food and upon eating, the snake gains points equal to the food's score points.
     """
 
@@ -16,7 +19,7 @@ class Food:
 
         :param x_coordinate: Food block's left edge x-coordinate measured in game blocks.
         :param y_coordinate: Food block's top edge y-coordinate measured in game blocks.
-        :param score: The amount of points, the snake gains for eating the food. Allows "superfoods" to be generated.
+        :param score: Points awarded when the food is eaten.
         :param lifetime: The amount of steps, that the snake can take, until the food will disappear.
                          If set to None (default), the food will remain on the board indefinitely.
                          If set to a number, with each snake step, the number is decreased until it reaches 0,
@@ -24,6 +27,8 @@ class Food:
                          This can be used, to create super foods which are worth more points,
                          but will disappear after some time.
         """
+        validate_coordinates((x_coordinate, y_coordinate))
+
         self.score = score
         self.x_coordinate = x_coordinate
         self.y_coordinate = y_coordinate
@@ -34,3 +39,7 @@ class Food:
         """Decrease the lifetime, if it has been set."""
         if self.lifetime is not None and self.lifetime > 0:
             self.lifetime -= 1
+
+    def get_position(self) -> tuple[int, int]:
+        """Returns the position of the food as a tuple."""
+        return self.x_coordinate, self.y_coordinate

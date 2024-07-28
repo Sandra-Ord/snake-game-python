@@ -7,10 +7,12 @@ class ColorScheme:
     Color Scheme class to display the UI in different color schemes.
 
     The scheme has:
-        * a name, that can be used for display along with a color that is recommended for the text,
+        * a name, that can be used for display, along with a color that is recommended for the text,
         * color for displaying the food elements,
-        * which mode the snake should be styled in (solid color, striped, solid color with a different head or tail),
-        * colors for styling the snake.
+        * which mode the snake should be styled in (solid color, pattern repeating, pattern once),
+        * pattern, which should be represented on the snake,
+        * head color, if set the snake's head will be displayed with the color,
+        * tail color, if set the snake's tail will be displayed with the color.
     """
 
     def __init__(self, scheme_name: str,
@@ -21,7 +23,23 @@ class ColorScheme:
                  tail_color: tuple[int, int, int] = None,
                  text_color: tuple[int, int, int] = None):
         """
+        Color Scheme constructor method.
 
+        :param scheme_name: Name of the color scheme.
+        :param color_mode: Color mode for the snake pattern.
+        :param food_color: Color of the food. (This color does not extend to super foods.)
+        :param pattern: Pattern of the snake's body.
+                        If the color mode is set to PATTERN_ONCE, the body pattern is displayed once
+                        across the snake's body.
+                        The length of each pattern color depends on the length of the snake.
+                        The segments get longer starting from the head.
+                        If the color mode is set to PATTERN_REPEAT, the body pattern is displayed repeatedly
+                        until the end of the snake.
+        :param head_color: The color to use for the snake's head.
+                           If the head color is set, then the body pattern will start after the head.
+        :param tail_color: The color to use for the snake's tail.
+                           If the tail color is set, then the body pattern will end before the tail.
+        :param text_color: Recommended color to display text in, that matches the color scheme.
         """
         self.scheme_name = scheme_name
 
@@ -73,7 +91,8 @@ class ColorScheme:
     @staticmethod
     def get_python_color_scheme():
         """
-        Python color scheme is inspired by the programming language as the game is written in it, and it doubles as a well-known snake species:
+        Python color scheme is inspired by the programming language as the game is written in it,
+        and it doubles as a well-known snake species:
          * Snake is striped with blue and yellow (colors of the Python logo),
          * Food is white.
 
@@ -157,11 +176,31 @@ class ColorScheme:
         :return: Color Scheme object with the Estonia flag colors scheme property values.
         """
         return ColorScheme("Estonia",
-                           ColorMode.PATTERN_REPEAT,
+                           ColorMode.PATTERN_ONCE,
                            colors.ESTONIA_BLUE,
                            [colors.ESTONIA_BLUE,
                             colors.ESTONIA_BLACK,
                             colors.ESTONIA_WHITE],
+                           None,
+                           None,
+                           colors.BLACK)
+
+    @staticmethod
+    def get_windows_color_scheme():
+        """
+        Windows color scheme:
+            * Snake is the colors of the windows logo,
+            * Food is white.
+
+        :return: Color Scheme object with the Windows logo colors scheme property values.
+        """
+        return ColorScheme("Windows",
+                           ColorMode.PATTERN_ONCE,
+                           colors.WHITE,
+                           [colors.WINDOWS_RED,
+                            colors.WINDOWS_GREEN,
+                            colors.WINDOWS_BLUE,
+                            colors.WINDOWS_YELLOW],
                            None,
                            None,
                            colors.BLACK)

@@ -1,3 +1,8 @@
+## Table of Contents
+1. [Game Features](#game-features)
+2. [Game Controls](#game-controls)
+3. [Starting the Game](#starting-the-game)
+
 # Snake Game
 
 This is a classic implementation of the Snake game built using Python and Pygame. 
@@ -9,7 +14,14 @@ The snake has to grow and survive as long as possible without colliding into
 the borders or itself, which gets increasingly harder as 
 the snake takes up more and more space on the game board.
 
-![Snake Game Screenshot](https://via.placeholder.com/800x600?text=Screenshot+Coming+Soon)
+![Snake Game Paused Screenshot with Default Color Scheme](assets/snake_game_paused_default.png)
+*A paused game showing the default color scheme with a classic green snake.*
+
+![Snake Game In Play Screenshot with Python Color Scheme](assets/snake_game_in_play_python.png)
+*Gameplay using the Python color scheme with a blue and yellow striped snake.*
+
+![Snake Game Over Screenshot with Windows Color Scheme](assets/snake_game_over_windows.png)
+*Game over screen showcasing the Windows color scheme.*
 
 ## Game Features
 
@@ -19,18 +31,20 @@ Snake grows each time it reaches a food block.
 The game becomes increasingly harder in time as the snake grows and takes up a bigger area of the game board,
 while still having to avoid colliding into the borders and its own body.
 
+
 * **Food Generation**  
 Food items appear randomly in the game area one by one. Each time the snake eats one, another will appear, 
 until the snake takes up all the room on the board - leaving no room for new foods to be generated.  
 Eating the foods causes the snake to grow longer and score points.
 
-* **Superfoods**
-Super foods are a special type of food items that appear occasionally during gameplay, 
+
+* **Superfoods**  
+Super food is a special type of food item that appears occasionally during gameplay, 
 offering higher points than regular food. Superfoods remain on the game board for a limited amount of time, to encourage 
 quick maneuvering and strategic planning, as players have to decide whether to go after the food or focus on safety. 
 They are visually distinguishable by their unique color, that changes - darkens - as their time 
 remaining on the board decreases, to provide players with a visual cue about how long they have to collect them.
-Once the food's lifetime has run out, a new food item will be generated randomly.
+Once the food's lifetime has run out, it will disappear and a new food item will be randomly generated.
   * Score
     * Regular Food: 1 point
     * Superfood variants:
@@ -40,35 +54,38 @@ Once the food's lifetime has run out, a new food item will be generated randomly
       * Note: The different superfood variants are not visually distinct from one another, 
         to add an element of surprise to the game.
 
+
 * **Collision Detection**  
 The game will end, once the snake either runs into a border or crashes into itself.  
-The snake can't directly backwards, as it would cause self collision. 
+The snake can't move directly backwards, as it would cause self collision. 
 The user can try to navigate the snake in the opposite direction, however the snake will not respond to this.
+  
 
 * **Winning & Losing**  
-Winning the game of snake is hard. 
-The game will be won, once the snake takes up all the space on the game board.  
-The current version of the game, will not end if the snake reaches the field's maximum capacity, 
-and lets the player keep moving the snake around, however, no more food can be generated as 
-there won't be sufficient space. Once the snake incurs a collision, the game will end
-with a winning status.  
-The game will be lost if a collision is detected (with a border or the snake's own tail) any earlier,
-than the snake reaching the maximum possible length.
+Winning the game of snake is quite a challenge. 
+The game is won, once the snake has grown enough to fill the entire game board.  
+At this point, the player can continue navigating the snake, but no additional food will appear 
+due to the lack of space. 
+The game will end with a winning status, only if a collision occurs after reaching this maximum length. 
+If the snake collides with the border or itself before reaching this length, the game is lost.
+
 
 * **Pause & Resume**  
 The game supports pausing and resuming, allowing players to take breaks without losing their progress. 
+
 
 * **Score Tracking**  
 The game keeps track of the ongoing game's score and stores the gaming session's high score as well, 
 to give the player a goal to beat. Both are displayed at the top of the screen. 
 Scores are not stored permanently - once the game is closed, the scores will be lost
 
-* **Color Customization**  
-The game has 4 distinct snake themed color schemes to customize the snake's and its foods' visual appearance.  
-The 3 themes, which have been added in addition to the default theme, have been included in the game as easter eggs 
-(or should it be called snake egg `;)`). They can be toggled with specific keyboard keys, however 
-the game UI does not mention them, much less include instructions for accessing them.  
 
+* **Color Customization**  
+The game includes various color schemes to customize the snake and food's visual appearance.  
+The themes, which have been added in addition to the default theme, have been included in the game as Easter eggs 
+(or should it be called snake egg `;)`). They can be toggled with specific keyboard keys, however 
+the game's UI does not mention them, much less include instructions for accessing them.  
+Here is a description of 4 of the themes that have been included in the game:
   * **Default color scheme** provides the classic and nostalgic UX of snake game with a green snake and red foods.
   * **Python color scheme** is inspired by the Python programming language logo as the game is written in it, and 
       it doubles as a well-known snake species. 
@@ -89,20 +106,18 @@ The game is controlled via keyboard buttons.
   * Use the arrow keys (`←`, `↑`, `→`, `↓`) to control the direction of the snake and guide it towards food.
   * Snake, which is longer than a singular block can't move back in 
     the opposite direction of the direction it is currently moving in, 
-    as it would cause the snake to collide into itself.
+    as it would cause the snake to collide with itself.
 * **Pausing and Resuming the Game**
   * Pause - Press `Esc` to pause the game.
-  * Resume - Press `Enter` or `Space` to resume to the game.
+  * Resume - Press `Space` to resume to the game.
 * **Restart and Quit**
-  * Start a New Game - Press `S` to start a new game.
-  * Quit the Gae - Press `Q` to quit the game.
+  * Starting a new game and quitting entirely can only be done, if the game is already paused.
+  * Start a New Game - Press `Enter` to start a new game.
+  * Quit the Game - Press `Esc` to quit the game.
 * **Color Schemes**
-  * Ekans Color Scheme - Press `E` to activate the Pokémon Ekans color scheme with 
-    a yellow-tailed purple snake and green food.
-  * Python Color Scheme - Press `P` to switch to the Python color scheme with a blue and yellow striped snake.
-  * Slytherin Color Scheme - Press `Z` to use the Harry Potter Slytherin house color scheme with 
-    a silver snake, which has a green head and gold food.
   * Default Color Scheme - Press `Delete` to revert to the default color scheme with a classic green snake and red food.
+  * Explore different keyboard letter keys to find the other color schemes in the game.
+  * If a snake is patterned, try pressing `Caps Lock` and see what happens ;)
 
 ## Starting the Game
 

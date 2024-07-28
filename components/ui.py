@@ -17,9 +17,9 @@ class Ui:
 
     def __init__(self, brain: Brain, block_size: int = 10):
         """
-        Game Ui constructor method.
+        Game UI constructor method.
 
-        :param brain: Game brain for which the ui is displayed.
+        :param brain: Game brain, which provides the game state, for which the UI is displayed.
         :param block_size: The amount of pixels that should be displayed per one in-game block.
         """
         self.brain = brain
@@ -49,7 +49,7 @@ class Ui:
             * current food.
 
         If the game is paused,
-        display the game status (paused/lost/won) and instructions.
+            display the game status (paused/lost/won) and instructions.
         """
         self.draw_game_area()
         self.display_score(ScoreType.CURRENT, self.blocks_to_pixels(self.brain.left_border))
@@ -78,59 +78,40 @@ class Ui:
         """
         self.display.fill(base_color)
         for border in self.brain.get_borders():
-            pygame.draw.rect(self.display, border_color, self.pixel_rectangle(border))
+            self.draw_rectangle(border, border_color)
 
     def draw_snake(self) -> None:
-        """Draw the snake block by block according to the color scheme."""
-        snake_index = 0
-
+        """Draw the snake block by block with the appropriate colors."""
         # Draw the head
         if self.color_scheme.head_color is not None:
-            self.draw_snake_position(self.brain.snake.get_head_position(), self.color_scheme.head_color)
-            snake_index += 1
+            self.draw_block_in_position(self.brain.snake.get_head_position(), self.color_scheme.head_color)
 
-        pattern_index = 0
-        pattern = self.color_scheme.body_pattern
-        pattern_length = len(pattern)
-
-        pattern_end = self.brain.snake.length() \
+        snake_pattern_start = 0 if self.color_scheme.head_color is None else 1
+        snake_pattern_end = self.brain.snake.length() \
             if self.color_scheme.tail_color is None \
             else self.brain.snake.length() - 1
 
+        # Draw the pattern on the body
         if self.color_scheme.color_mode == ColorMode.PATTERN_ONCE:
-            segment_lengths = [self.brain.snake.length() // pattern_length] * pattern_length
-            extra_segment = self.brain.snake.length() % pattern_length
-
-            for i in range(extra_segment):
-                segment_lengths[i] += 1
-
-            for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
-                if segment_lengths[pattern_index] > 0:
-                    self.draw_snake_position(pos, pattern[pattern_index])
-                    segment_lengths[pattern_index] -= 1
-                    if segment_lengths[pattern_index] <= 0:
-                        pattern_index += 1
-
+            self.draw_pattern_once_snake(snake_pattern_start, snake_pattern_end)
         else:
-            for pos in self.brain.snake.body_positions[snake_index:pattern_end]:
-                self.draw_snake_position(pos, self.color_scheme.body_pattern[pattern_index])
-                pattern_index = (pattern_index + 1) % len(self.color_scheme.body_pattern)
+            self.draw_default_snake(snake_pattern_start, snake_pattern_end)
 
+        # Draw the tail
         if self.color_scheme.tail_color is not None:
-            self.draw_snake_position(self.brain.snake.get_tail_position(), self.color_scheme.tail_color)
+            self.draw_block_in_position(self.brain.snake.get_tail_position(), self.color_scheme.tail_color)
 
     def draw_food(self) -> None:
         """Draw the food block using the food color of the color scheme."""
-        food_x, food_y = self.brain.food.x_coordinate, self.brain.food.y_coordinate
         food_color = self.color_scheme.food_color if self.brain.food.lifetime is None \
             else self.get_special_food_color(self.brain.food.lifetime)
-        self.draw_rectangle([food_x, food_y, 1, 1], food_color)
+        self.draw_block_in_position(self.brain.food.get_position(), food_color)
 
     def display_score(self, score_type: ScoreType = ScoreType.CURRENT,
                       x: int = 0, y: int = 0,
                       score_tag_text: str = "", color=colors.BLACK) -> None:
         """
-        Display the requested score (current or high score) at the given coordinates with the tag text in front.
+        Display the current or high score.
 
         :param score_type: Score type to define which score to use with the text (current or high).
         :param x: X-coordinate of the text.
@@ -148,7 +129,7 @@ class Ui:
                           self.color_scheme.text_color,
                           self.display_width / 2.5, 0)
 
-    def display_game_status(self, color=colors.WHITE) -> None:
+    def display_game_status(self, text_color=colors.WHITE) -> None:
         """Display the game status (Paused/Lost/Won) when the game is not currently active."""
         if self.brain.game_paused:
             status_text = {
@@ -157,40 +138,38 @@ class Ui:
                 GameStatus.WON: "Game Won"
             }.get(self.brain.game_status, "")
 
-            self.display_text(status_text, self.game_font, color, self.display_width / 2.5, self.display_height / 3)
+            self.display_text(status_text, self.game_font, text_color, self.display_width / 2.5, self.display_height / 3)
 
-    def display_instructions(self, color=colors.WHITE) -> None:
+    def display_instructions(self, text_color=colors.WHITE) -> None:
         """Display the instructions of the game, depending on the state and what actions are allowed."""
         instructions = [
             "← ↕ → - Move the Snake",
             "Esc  -  Pause the Game",
-            "Enter/Space - Continue",
-            "S  -  Start a new Game",
-            "Q      -     Quit Game"
+            "Esc (x2)  -  Quit Game",
+            "Space    -    Continue",
+            "Enter    -    New Game",
         ]
 
-        # Continue instruction is left out when the game is over (can't unpause a game that has ended).
+        # 'Continue' instruction is left out when the game is over (can't unpause a game that has ended).
         if not self.brain.game_in_play():
-            instructions = instructions[0:2] + instructions[3:]
+            instructions.pop(3)
 
         line_height = self.display_height / 3 * 2
         for line in instructions:
-            self.display_text(line, self.instructions_font, color, self.display_width / 2.75, line_height)
+            self.display_text(line, self.instructions_font, text_color, self.display_width / 2.75, line_height)
             line_height += 30
 
     # ----------------------------------- COLOR SCHEME METHODS ----------------------------------
 
     def set_color_scheme(self, color_scheme: ColorScheme) -> None:
-        """
-        Set the color scheme of the UI to the custom color_scheme.
-
-        :param color_scheme: Custom color scheme
-        """
+        """Set the color scheme of the UI to the custom color_scheme."""
         self.color_scheme = color_scheme
 
     def toggle_color_scheme_repeat(self) -> None:
         """
-        Toggle the color scheme of the UI between PATTERN_REPEAT and PATTERN_ONCE.
+        Toggle UI color scheme's color mode between PATTERN_REPEAT and PATTERN_ONCE.
+
+        If the color mode is SOLID, the method has no effect.
         """
         if self.color_scheme.color_mode == ColorMode.PATTERN_REPEAT:
             self.color_scheme.color_mode = ColorMode.PATTERN_ONCE
@@ -225,15 +204,83 @@ class Ui:
         """Set the color scheme to Estonia flag colors."""
         self.set_color_scheme(ColorScheme.get_estonia_color_scheme())
 
+    def set_windows_color_scheme(self) -> None:
+        """Set the color scheme to Microsoft Windows logo colors."""
+        self.set_color_scheme(ColorScheme.get_windows_color_scheme())
+
     # ----------------------------------------- HELPERS -----------------------------------------
 
-    def draw_snake_position(self, position: tuple[int, int], color: tuple[int, int, int]) -> None:
+    def draw_pattern_once_snake(self, snake_pattern_start: int, snake_pattern_end: int) -> None:
+        """
+        Draw the snake's patterned body in the PATTERN_ONCE.
+
+        The UI color scheme's body pattern is displayed once across the snake's body.
+        The length of each pattern color depends on the length of the snake.
+        The segments get longer starting from the head.
+
+        :param snake_pattern_start: Index of the snake position, where to start drawing the pattern from.
+        :param snake_pattern_end: Index of the snake position, where to stop drawing the pattern.
+        """
+        pattern_index = 0
+        pattern = self.color_scheme.body_pattern
+        pattern_length = len(pattern)
+
+        base_segment_length = self.brain.snake.length() // pattern_length
+        extra_segments = self.brain.snake.length() % pattern_length
+
+        segment_counter = base_segment_length if extra_segments <= 0 else base_segment_length + 1
+        for pos in self.brain.snake.body_positions[snake_pattern_start:snake_pattern_end]:
+            self.draw_block_in_position(pos, pattern[pattern_index])
+            segment_counter -= 1
+            if segment_counter <= 0:
+                pattern_index += 1
+                extra_segments -= 1  # Remove an extra segment, before re-calculating, in case it was just used up.
+                segment_counter = base_segment_length if extra_segments <= 0 else base_segment_length + 1
+
+    def draw_default_snake(self, snake_pattern_start: int, snake_pattern_end: int) -> None:
+        """
+        Draw the snake's patterned body in the PATTERN_REPEAT and SOLID color mode.
+
+        The UI color scheme's body pattern is repeatedly iterated over until the end of the snake.
+
+        :param snake_pattern_start: Index of the snake position, where to start drawing the pattern from.
+        :param snake_pattern_end: Index of the snake position, where to stop drawing the pattern.
+        """
+        pattern_index = 0
+        for pos in self.brain.snake.body_positions[snake_pattern_start:snake_pattern_end]:
+            self.draw_block_in_position(pos, self.color_scheme.body_pattern[pattern_index])
+            pattern_index = (pattern_index + 1) % len(self.color_scheme.body_pattern)
+
+    def draw_block_in_position(self, position: tuple[int, int], color: tuple[int, int, int]) -> None:
+        """
+        Display a 1x1 square block at the given position.
+
+        :param position: The top left corner coordinates of the block.
+        :param color: Color to display the block.
+        """
         self.draw_rectangle([position[0], position[1], 1, 1], color)
 
     def draw_rectangle(self, block_rectangle: list[int, int, int, int], color: tuple[int, int, int]) -> None:
+        """
+        Display the in-game block rectangle in pixels.
+
+        Used to display the in-game block elements of the game.
+
+        :param block_rectangle: Rectangle information [width, height, x, y] measured in in-game blocks.
+        :param color: Color to display the rectangle.
+        """
         pygame.draw.rect(self.display, color, self.pixel_rectangle(block_rectangle))
 
     def display_text(self, text: str, font, color, x, y) -> None:
+        """
+        Display the text on the screen, in the given font and color, at the set coordinates.
+
+        :param text: Text to display on the screen.
+        :param font: Font to display the text.
+        :param color: Color to display the text in.
+        :param x: X-coordinate to display the text at.
+        :param y: Y-coordinate to display the text at.
+        """
         text = font.render(text, True, color)
         self.display.blit(text, [x, y])
 
@@ -258,7 +305,14 @@ class Ui:
         """
         return [self.blocks_to_pixels(value) for value in block_rectangle]
 
-    def get_special_food_color(self, lifetime: int) -> tuple[int, int, int]:
+    @staticmethod
+    def get_special_food_color(lifetime: int) -> tuple[int, int, int]:
+        """
+        Get the color of the superfood based on how much lifetime it has left.
+
+        :param lifetime: The lifetime the food has left.
+        :return: Current color of the superfood.
+        """
         if lifetime > 40:
             return colors.BRIGHT_MAGENTA
         elif lifetime > 30:

@@ -57,3 +57,10 @@ PASTEL_BLUE = (186, 225, 255)
 ESTONIA_BLUE = (0, 114, 206)
 ESTONIA_BLACK = (66, 66, 66)
 ESTONIA_WHITE = (255, 255, 255)
+
+"""Color constants for the Windows logo color scheme snake game."""
+
+WINDOWS_RED = (242, 80, 34)
+WINDOWS_GREEN = (127, 186, 0)
+WINDOWS_BLUE = (0, 164, 239)
+WINDOWS_YELLOW = (255, 185, 0)
